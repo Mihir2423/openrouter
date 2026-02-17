@@ -25,7 +25,7 @@ export class BaseLlm {
     throw new Error("Not implemented chat function");
   }
 
-  static async *streamChat(
+  static streamChat(
     model: string,
     messages: Messages,
   ): AsyncGenerator<StreamChunk> {
