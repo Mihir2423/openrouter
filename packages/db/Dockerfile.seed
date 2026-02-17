@@ -1,0 +1,25 @@
+FROM oven/bun:latest
+
+WORKDIR /app
+
+# Install dependencies for Prisma
+RUN apt-get update && apt-get install -y openssl
+
+# Copy root package files
+COPY package.json bun.lock ./
+
+# Copy the db package
+COPY packages/db ./packages/db
+
+# Install dependencies
+RUN bun install
+
+# Generate Prisma client
+WORKDIR /app/packages/db
+RUN bun prisma generate
+
+# Set environment variable for database URL (will be overridden at runtime)
+ENV DATABASE_URL=""
+
+# Command to run the seed script
+CMD ["bun", "prisma/seed.ts"]
