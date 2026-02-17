@@ -21,6 +21,7 @@ const app = new Elysia()
           deleted: false,
         },
         select: {
+          id: true,
           user: true,
         },
       });
@@ -73,6 +74,7 @@ const app = new Elysia()
         (async () => {
           let outputTokens = 0;
           let inputTokens = 0;
+          let fullOutput = "";
 
           try {
             let streamGenerator: AsyncGenerator<StreamChunk> | null = null;
@@ -122,6 +124,7 @@ const app = new Elysia()
                 outputTokens += Math.ceil(
                   chunk.choices[0].delta.content.length / 4,
                 );
+                fullOutput += chunk.choices[0].delta.content;
               }
             }
 
@@ -139,6 +142,19 @@ const app = new Elysia()
               (inputTokens * provider.inputTokenCost +
                 outputTokens * provider.outputTokenCost) /
               10;
+
+            await prisma.conversation.create({
+              data: {
+                userId: apiKeyDb.user.id,
+                apiKeyId: apiKeyDb.id,
+                modelProviderMappingId: provider.id,
+                input: JSON.stringify(body.messages),
+                output: fullOutput,
+                inputTokenCount: inputTokens,
+                outputTokenCount: outputTokens,
+              },
+            });
+
             await prisma.user.update({
               where: { id: apiKeyDb.user.id },
               data: { credits: { decrement: creditsUsed } },
@@ -190,6 +206,23 @@ const app = new Elysia()
         (response.inputTokensConsumed * provider.inputTokenCost +
           response.outputTokensConsumed * provider.outputTokenCost) /
         10;
+
+      const outputText = response.completions.choices
+        .map((choice) => choice.message.content)
+        .join("");
+
+      await prisma.conversation.create({
+        data: {
+          userId: apiKeyDb.user.id,
+          apiKeyId: apiKeyDb.id,
+          modelProviderMappingId: provider.id,
+          input: JSON.stringify(body.messages),
+          output: outputText,
+          inputTokenCount: response.inputTokensConsumed,
+          outputTokenCount: response.outputTokensConsumed,
+        },
+      });
+
       console.log(creditsUsed);
       const res = await prisma.user.update({
         where: {
