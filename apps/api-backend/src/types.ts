@@ -1,18 +1,19 @@
 import { t } from "elysia";
 
-
-export const Messages = t.Array(t.Object({
+export const Messages = t.Array(
+  t.Object({
     role: t.Enum({
       user: "user",
-      assistant: "assistant"
+      assistant: "assistant",
     }),
-    content: t.String()
-}))
+    content: t.String(),
+  }),
+);
 
 export type Messages = typeof Messages.static;
 
 export const Conversation = t.Object({
-    model: t.String(),
-    messages: Messages
-})
-
+  model: t.String(),
+  messages: Messages,
+  stream: t.Optional(t.Boolean()),
+});
