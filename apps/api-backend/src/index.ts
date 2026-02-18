@@ -69,6 +69,9 @@ const app = new Elysia()
             const data = `data: ${JSON.stringify(chunk)}\n\n`;
             controller.enqueue(encoder.encode(data));
           },
+          flush(controller) {
+            controller.enqueue(encoder.encode("data: [DONE]\n\n"));
+          },
         });
         const writer = stream.writable.getWriter();
 
@@ -79,22 +82,25 @@ const app = new Elysia()
 
           try {
             let streamGenerator: AsyncGenerator<StreamChunk> | null = null;
-
+            const completionId = generateCompletionId();
             if (
               provider.provider.name === "Google API" ||
               provider.provider.name === "Google Vertex"
             ) {
               streamGenerator = Gemini.streamChat(
+                completionId,
                 providerModelName,
                 body.messages,
               );
             } else if (provider.provider.name === "OpenAI") {
               streamGenerator = OpenAi.streamChat(
+                completionId,
                 providerModelName,
                 body.messages,
               );
             } else if (provider.provider.name === "Claude API") {
               streamGenerator = Claude.streamChat(
+                completionId,
                 providerModelName,
                 body.messages,
               );
@@ -128,21 +134,29 @@ const app = new Elysia()
                 fullOutput += chunk.choices[0].delta.content;
               }
             }
-
-            await writer.write({
-              choices: [
-                {
-                  delta: {
-                    content: "",
-                  },
-                },
-              ],
-            } as any);
-
             const creditsUsed =
               (inputTokens * provider.inputTokenCost +
                 outputTokens * provider.outputTokenCost) /
               10;
+
+            await writer.write({
+              id: completionId,
+              object: "chat.completion.chunk",
+              created: Math.floor(Date.now() / 1000),
+              model: providerModelName,
+              choices: [
+                {
+                  index: 0,
+                  delta: {},
+                  finish_reason: "stop",
+                },
+              ],
+              inputTokensConsumed: inputTokens,
+              outputTokensConsumed: outputTokens
+            });
+
+
+
 
             await prisma.conversation.create({
               data: {

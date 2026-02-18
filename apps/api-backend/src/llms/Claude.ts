@@ -37,6 +37,7 @@ export class Claude extends BaseLlm {
   }
 
   static async *streamChat(
+    completionId: string,
     model: string,
     messages: Messages,
   ): AsyncGenerator<StreamChunk> {
@@ -55,11 +56,17 @@ export class Claude extends BaseLlm {
         const delta = chunk.delta as { text?: string };
         if (delta.text) {
           yield {
+            id: completionId,
+            object: "chat.completion.chunk",
+            model,
+            created: Math.floor(Date.now() / 1000),
             choices: [
               {
+                index: 0,
                 delta: {
                   content: delta.text,
                 },
+                finish_reason: null
               },
             ],
           };

@@ -36,6 +36,7 @@ export class OpenAi extends BaseLlm {
   }
 
   static async *streamChat(
+    completionId: string,
     model: string,
     messages: Messages,
   ): AsyncGenerator<StreamChunk> {
@@ -51,11 +52,17 @@ export class OpenAi extends BaseLlm {
     for await (const chunk of stream) {
       if (chunk.type === "response.output_text.delta") {
         yield {
+          id: completionId,
+          object: "chat.completion.chunk",
+          model,
+          created: Math.floor(Date.now() / 1000),
           choices: [
             {
+              index: 0,
               delta: {
                 content: chunk.delta,
               },
+              finish_reason: null
             },
           ],
         };

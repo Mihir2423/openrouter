@@ -18,11 +18,19 @@ export type LlmResponse = {
 };
 
 export type StreamChunk = {
+  id: string;
+  object: "chat.completion.chunk";
+  created: number;
+  model: string;
   choices: {
+    index: number;
     delta: {
-      content: string;
+      content?: string;
     };
+    finish_reason: null | "stop",
   }[];
+  inputTokensConsumed?: number;
+  outputTokensConsumed?: number;
 };
 
 export class BaseLlm {
@@ -36,6 +44,7 @@ export class BaseLlm {
 
   static streamChat(
     model: string,
+    completionId: string,
     messages: Messages,
   ): AsyncGenerator<StreamChunk> {
     throw new Error("Not implemented streamChat function");

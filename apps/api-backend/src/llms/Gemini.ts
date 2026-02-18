@@ -37,6 +37,7 @@ export class Gemini extends BaseLlm {
   }
 
   static async *streamChat(
+    completionId: string,
     model: string,
     messages: Messages,
   ): AsyncGenerator<StreamChunk> {
@@ -52,11 +53,17 @@ export class Gemini extends BaseLlm {
       const text = chunk.text;
       if (text) {
         yield {
+          id: completionId,
+          object: "chat.completion.chunk",
+          model,
+          created: Math.floor(Date.now() / 1000),
           choices: [
             {
+              index: 0,
               delta: {
                 content: text,
               },
+              finish_reason: null
             },
           ],
         };
