@@ -6,7 +6,7 @@ const client = new OpenAI({
 });
 
 export class OpenAi extends BaseLlm {
-  static async chat(model: string, messages: Messages): Promise<LlmResponse> {
+  static async chat(completionId: string, model: string, messages: Messages): Promise<LlmResponse> {
     const response = await client.responses.create({
       model: model,
       input: messages.map((message) => ({
@@ -18,15 +18,20 @@ export class OpenAi extends BaseLlm {
     return {
       inputTokensConsumed: response.usage?.input_tokens ?? 0,
       outputTokensConsumed: response.usage?.output_tokens ?? 0,
-      completions: {
+      model,
+      created: Math.floor(Date.now() / 1000),
+      id: completionId,
+      object: "chat.completion",
         choices: [
           {
+            index: 0,
             message: {
+              role: "assistant",
               content: response.output_text,
             },
+            finish_reason: "stop"
           },
         ],
-      },
     };
   }
 

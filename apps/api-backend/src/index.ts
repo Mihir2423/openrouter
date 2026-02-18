@@ -6,6 +6,7 @@ import { Gemini } from "./llms/Gemini";
 import { OpenAi } from "./llms/OpenAi";
 import { Claude } from "./llms/Claude";
 import { LlmResponse, StreamChunk } from "./llms/Base";
+import { generateCompletionId } from "./utils/generate-completion";
 
 const app = new Elysia()
   .use(bearer())
@@ -181,19 +182,23 @@ const app = new Elysia()
 
       let response: LlmResponse | null = null;
       if (provider.provider.name === "Google API") {
-        response = await Gemini.chat(providerModelName, body.messages);
+      const completionId = generateCompletionId();
+        response = await Gemini.chat(completionId, providerModelName, body.messages);
       }
 
       if (provider.provider.name === "Google Vertex") {
-        response = await Gemini.chat(providerModelName, body.messages);
+        const completionId = generateCompletionId();
+        response = await Gemini.chat(completionId, providerModelName, body.messages);
       }
 
       if (provider.provider.name === "OpenAI") {
-        response = await OpenAi.chat(providerModelName, body.messages);
+        const completionId = generateCompletionId();
+        response = await OpenAi.chat(completionId, providerModelName, body.messages);
       }
 
       if (provider.provider.name === "Claude API") {
-        response = await Claude.chat(providerModelName, body.messages);
+        const completionId = generateCompletionId();
+        response = await Claude.chat(completionId, providerModelName, body.messages);
       }
 
       if (!response) {
@@ -207,7 +212,7 @@ const app = new Elysia()
           response.outputTokensConsumed * provider.outputTokenCost) /
         10;
 
-      const outputText = response.completions.choices
+      const outputText = response.choices
         .map((choice) => choice.message.content)
         .join("");
 

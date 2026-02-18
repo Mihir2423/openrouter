@@ -1,15 +1,20 @@
 import { Messages } from "../types";
 
 export type LlmResponse = {
-  completions: {
-    choices: {
-      message: {
-        content: string;
-      };
-    }[];
-  };
+  id: string;
+  object: "chat.completion";
+  model: string;
+  choices: {
+    index: number;
+    message: {
+      content: string;
+      role: "assistant"
+    };
+    finish_reason: "stop";
+  }[];
   inputTokensConsumed: number;
   outputTokensConsumed: number;
+  created: number;
 };
 
 export type StreamChunk = {
@@ -21,7 +26,11 @@ export type StreamChunk = {
 };
 
 export class BaseLlm {
-  static async chat(model: string, messages: Messages): Promise<LlmResponse> {
+  static async chat(
+    completionId: string,
+    model: string,
+    messages: Messages,
+  ): Promise<LlmResponse> {
     throw new Error("Not implemented chat function");
   }
 

@@ -7,7 +7,7 @@ const ai = new GoogleGenAI({
 });
 
 export class Gemini extends BaseLlm {
-  static async chat(model: string, messages: Messages): Promise<LlmResponse> {
+  static async chat(completionId: string, model: string, messages: Messages): Promise<LlmResponse> {
     const response = await ai.models.generateContent({
       model: model,
       contents: messages.map((message) => ({
@@ -19,15 +19,20 @@ export class Gemini extends BaseLlm {
     return {
       outputTokensConsumed: response.usageMetadata?.candidatesTokenCount ?? 0,
       inputTokensConsumed: response.usageMetadata?.promptTokenCount ?? 0,
-      completions: {
+      id: completionId,
+      model,
+      created: Math.floor(Date.now() / 1000),
+      object: "chat.completion",
         choices: [
           {
+            index: 0,
             message: {
+              role: "assistant",
               content: response.text ?? "",
             },
+          finish_reason: "stop"
           },
         ],
-      },
     };
   }
 

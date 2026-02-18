@@ -8,7 +8,7 @@ const client = new Anthropic({
 });
 
 export class Claude extends BaseLlm {
-  static async chat(model: string, messages: Messages): Promise<LlmResponse> {
+  static async chat(completionId: string, model: string, messages: Messages): Promise<LlmResponse> {
     const response = await client.messages.create({
       max_tokens: 2048,
       messages: messages.map((message) => ({
@@ -21,13 +21,18 @@ export class Claude extends BaseLlm {
     return {
       outputTokensConsumed: response.usage.output_tokens,
       inputTokensConsumed: response.usage.input_tokens,
-      completions: {
-        choices: response.content.map((content) => ({
+      object: "chat.completion",
+      id: completionId,
+      created: Math.floor(Date.now() / 1000),
+      model,
+      choices: response.content.map((content) => ({
+          index: 0,
           message: {
             content: (content as TextBlock).text,
+            role: "assistant"
           },
+          finish_reason:"stop"
         })),
-      },
     };
   }
 
