@@ -98,6 +98,16 @@ async function main() {
         companyId: 3,
       },
     }),
+    prisma.model.upsert({
+      where: { id: 3 },
+      update: {},
+      create: {
+        id: 3,
+        name: "Google: Gemini 2.5 Flash",
+        slug: "google/gemini-2.5-flash",
+        companyId: 3,
+      },
+    }),
   ]);
   console.log(`Created ${models.length} models`);
 
@@ -120,6 +130,17 @@ async function main() {
       create: {
         id: 2,
         modelId: 2,
+        providerId: 1,
+        inputTokenCost: 0,
+        outputTokenCost: 0,
+      },
+    }),
+    prisma.modelProviderMapping.upsert({
+      where: { id: 3 },
+      update: {},
+      create: {
+        id: 3,
+        modelId: 3,
         providerId: 1,
         inputTokenCost: 0,
         outputTokenCost: 0,
