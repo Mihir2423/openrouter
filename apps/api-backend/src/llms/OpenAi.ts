@@ -1,5 +1,5 @@
 import { Messages } from "../types";
-import { BaseLlm, LlmResponse, StreamChunk } from "./Base";
+import { BaseLlm, LlmResponse, StreamChunk, createStreamChunk } from "./Base";
 import OpenAI from "openai";
 const client = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -31,6 +31,7 @@ export class OpenAi extends BaseLlm {
   }
 
   static async *streamChat(
+    completionId: string,
     model: string,
     messages: Messages,
   ): AsyncGenerator<StreamChunk> {
@@ -45,15 +46,7 @@ export class OpenAi extends BaseLlm {
 
     for await (const chunk of stream) {
       if (chunk.type === "response.output_text.delta") {
-        yield {
-          choices: [
-            {
-              delta: {
-                content: chunk.delta,
-              },
-            },
-          ],
-        };
+        yield createStreamChunk(completionId, model, chunk.delta);
       }
     }
   }

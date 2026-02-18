@@ -1,5 +1,5 @@
 import { Messages } from "../types";
-import { BaseLlm, LlmResponse, StreamChunk } from "./Base";
+import { BaseLlm, LlmResponse, StreamChunk, createStreamChunk } from "./Base";
 import { GoogleGenAI } from "@google/genai";
 
 const ai = new GoogleGenAI({
@@ -32,6 +32,7 @@ export class Gemini extends BaseLlm {
   }
 
   static async *streamChat(
+    completionId: string,
     model: string,
     messages: Messages,
   ): AsyncGenerator<StreamChunk> {
@@ -46,15 +47,7 @@ export class Gemini extends BaseLlm {
     for await (const chunk of response) {
       const text = chunk.text;
       if (text) {
-        yield {
-          choices: [
-            {
-              delta: {
-                content: text,
-              },
-            },
-          ],
-        };
+        yield createStreamChunk(completionId, model, text);
       }
     }
   }

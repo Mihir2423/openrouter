@@ -1,6 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { Messages } from "../types";
-import { BaseLlm, LlmResponse, StreamChunk } from "./Base";
+import { BaseLlm, LlmResponse, StreamChunk, createStreamChunk } from "./Base";
 import { TextBlock } from "@anthropic-ai/sdk/resources";
 
 const client = new Anthropic({
@@ -32,6 +32,7 @@ export class Claude extends BaseLlm {
   }
 
   static async *streamChat(
+    completionId: string,
     model: string,
     messages: Messages,
   ): AsyncGenerator<StreamChunk> {
@@ -49,15 +50,7 @@ export class Claude extends BaseLlm {
       if (chunk.type === "content_block_delta") {
         const delta = chunk.delta as { text?: string };
         if (delta.text) {
-          yield {
-            choices: [
-              {
-                delta: {
-                  content: delta.text,
-                },
-              },
-            ],
-          };
+          yield createStreamChunk(completionId, model, delta.text);
         }
       }
     }
